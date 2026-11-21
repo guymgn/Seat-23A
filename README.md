@@ -14,7 +14,7 @@ The view from a window seat just behind the wing, rendered live in the browser. 
 
 Nothing in it is a photo or a video. The clouds are a volume the camera flies over, the wing is lit by the same sun as the sky, and every so often the plane passes through a bank of cloud. Swipe down on the window to close the blind.
 
-My favorite part is in the app: when you choose a home airport, the sun in the window moves to match your place in the world, so the view feels like your flight.
+When you choose a home airport, the sun in the window moves to match your place in the world, so the view feels like your flight.
 
 ## How it works
 
