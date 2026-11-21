@@ -4,11 +4,11 @@ The view from the window seat, live.
 
 **Try it live: [guymagen.com/23a](https://www.guymagen.com/23a)**
 
-[![The 23A window by day, at sunset and at night](day-sunset-night.png)](https://www.guymagen.com/23a)
+[![The Seat 23A window by day, at sunset and at night](day-sunset-night.png)](https://www.guymagen.com/23a)
 
 One of my favorite moments on a flight is looking out of the window at the wing above the clouds. It is the moment the trip starts to feel real.
 
-I'm working on a new onboarding for [Teara](https://teara.io), my travel app, and I wanted the first screen to do more than explain what the app does. I wanted it to bring back exactly that feeling. 23A is that screen, on its own page.
+I'm working on a new onboarding for [Teara](https://teara.io), my travel app, and I wanted the first screen to do more than explain what the app does. I wanted it to bring back exactly that feeling. Seat 23A is that screen, on its own page.
 
 ## What you are looking at
 

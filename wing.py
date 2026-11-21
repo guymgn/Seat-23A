@@ -1,8 +1,8 @@
 """
-23A wing: the wing from the 23A plane window, as a real 3D object.
+Seat 23A wing: the wing from the Seat 23A plane window, as a real 3D object.
 
 Same numbers as the wing drawn on the page (a 737-style planform, in metres).
-Run inside Blender: Scripting tab > Open > Run Script. It adds a "23A Wing"
+Run inside Blender: Scripting tab > Open > Run Script. It adds a "Seat 23A Wing"
 collection with the wing, three flap track fairings and a camera at the window seat.
 
 Blender axes: +Y is the nose, +Z is up, the left wing extends toward -X.
@@ -84,7 +84,7 @@ def region(z, xc, upper, winglet_t):
 
 
 def material(name, color, metallic=0.0, roughness=0.4):
-    mat = bpy.data.materials.get("23A " + name) or bpy.data.materials.new("23A " + name)
+    mat = bpy.data.materials.get("Seat 23A " + name) or bpy.data.materials.new("Seat 23A " + name)
     mat.use_nodes = True
     bsdf = next((n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
     if bsdf:
@@ -150,7 +150,7 @@ def build_wing(collection):
         if len(e.link_faces) == 2 and e.calc_face_angle(0) > math.radians(50):
             e.smooth = False
 
-    mesh = bpy.data.meshes.new("23A Wing")
+    mesh = bpy.data.meshes.new("Seat 23A Wing")
     bm.to_mesh(mesh)
     bm.free()
     mesh.materials.append(material("Paint", grey(0.885), roughness=0.38))
@@ -188,7 +188,7 @@ def build_fairing(collection, zf, index, parent):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     for f in bm.faces:
         f.smooth = True
-    mesh = bpy.data.meshes.new(f"23A Fairing {index}")
+    mesh = bpy.data.meshes.new(f"Seat 23A Fairing {index}")
     bm.to_mesh(mesh)
     bm.free()
     mesh.materials.append(material("Fairing", grey(0.80), roughness=0.4))
@@ -216,7 +216,7 @@ def build_camera(collection):
 
 
 def build():
-    collection = bpy.data.collections.new("23A Wing")
+    collection = bpy.data.collections.new("Seat 23A Wing")
     bpy.context.scene.collection.children.link(collection)
     wing = build_wing(collection)
     for i, zf in enumerate((3.7, 7.3, 10.7), start=1):
