@@ -2,7 +2,7 @@
 
 The view from the window seat, live.
 
-![The 23A window by day, at sunset and at night](preview.png)
+![The 23A window by day, at sunset and at night](day-sunset-night.png)
 
 One of my favorite moments on a flight is looking out of the window at the wing above the clouds. It is the moment the trip starts to feel real.
 

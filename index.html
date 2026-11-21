@@ -93,9 +93,15 @@ a.btn{text-decoration:none;display:inline-block}
 .lede{font-size:15px;color:var(--muted);margin:-12px 0 0}
 .credit a{color:var(--text);text-decoration:underline;text-underline-offset:3px}
 .credit a:focus-visible,a.btn:focus-visible,.btn:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.themeToggle{position:fixed;top:14px;right:14px;z-index:5;width:34px;height:34px;padding:0;border:0;border-radius:9px;background:transparent;color:var(--text);display:grid;place-items:center;cursor:pointer;transition:background-color .2s ease}
+.themeToggle:hover,.themeToggle:focus-visible{background:color-mix(in srgb,var(--purple) 12%,transparent);color:var(--purple);outline:none}
+.themeToggle:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.themeToggle i{width:17px;height:17px;border:1.5px solid currentColor;border-radius:50%;background:linear-gradient(90deg,currentColor 50%,transparent 50%)}
 </style>
+<script>(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(e){}})();</script>
 </head>
 <body>
+<button class="themeToggle" id="themeToggle" type="button" aria-label="Switch theme"><i aria-hidden="true"></i></button>
 <h1>23A</h1>
 <p class="lede">The view from the window seat, live.</p>
 
@@ -133,14 +139,6 @@ a.btn{text-decoration:none;display:inline-block}
   <div class="row">
     <div><div class="k">Location</div><div class="v" style="text-align:left" id="locLabel">--</div></div>
     <button class="btn" id="locBtn">Use precise</button>
-  </div>
-  <div class="row">
-    <span class="k">Appearance</span>
-    <div class="seg" id="themeSeg">
-      <button data-theme="system" aria-pressed="true">System</button>
-      <button data-theme="light" aria-pressed="false">Light</button>
-      <button data-theme="dark" aria-pressed="false">Dark</button>
-    </div>
   </div>
   <div class="row">
     <label for="purple">Wing strobe</label>
@@ -247,13 +245,24 @@ function setMode(m){ mode=m; document.querySelectorAll('#modeSeg button').forEac
 $('modeSeg').onclick = e => { const b=e.target.closest('button'); if(b) setMode(b.dataset.mode); };
 $('time').oninput = e => { setMode('scrub'); minutes = +e.target.value; };
 
-// ---------- theme ----------
-let themePref='system';
-const mq = matchMedia('(prefers-color-scheme: dark)');
-function applyTheme(){ document.documentElement.dataset.theme = themePref==='system' ? (mq.matches?'dark':'light') : themePref; }
-mq.addEventListener?.('change', applyTheme); applyTheme();
-$('themeSeg').onclick = e => { const b=e.target.closest('button'); if(!b) return; themePref=b.dataset.theme;
-  document.querySelectorAll('#themeSeg button').forEach(x=>x.setAttribute('aria-pressed', x===b)); applyTheme(); };
+// ---------- theme: same key and behaviour as the rest of guymagen.com ----------
+const THEME_KEY='theme';
+const mq = matchMedia('(prefers-color-scheme: light)');
+const storedTheme = () => { try { const t=localStorage.getItem(THEME_KEY); return (t==='light'||t==='dark')?t:null; } catch(e){ return null; } };
+function applyTheme(t){
+  document.documentElement.dataset.theme=t; document.documentElement.style.colorScheme=t;
+  const next=t==='light'?'dark':'light', b=$('themeToggle');
+  b.setAttribute('aria-label',`Switch to ${next} mode`); b.title=`Switch to ${next} mode`;
+}
+const syncTheme = () => applyTheme(storedTheme() || (mq.matches?'light':'dark'));
+mq.addEventListener?.('change', syncTheme);
+addEventListener('storage', e => { if(e.key===THEME_KEY) syncTheme(); });
+$('themeToggle').onclick = () => {
+  const next = document.documentElement.dataset.theme==='light'?'dark':'light';
+  try { localStorage.setItem(THEME_KEY,next); } catch(e){}
+  applyTheme(next);
+};
+syncTheme();
 
 // ---------- purple, livery, cover ----------
 let purple = hex('#7c5cff');
