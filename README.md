@@ -1,4 +1,4 @@
-# 23A
+# Seat 23A
 
 The view from the window seat, live.
 
