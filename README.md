@@ -4,7 +4,14 @@ The view from the window seat, live.
 
 **Try it live: [guymagen.com/23a](https://www.guymagen.com/23a)**
 
-[![The Seat 23A window by day, at sunset and at night](day-sunset-night.png)](https://www.guymagen.com/23a)
+[![The Seat 23A window in four skies: day, sunset, night and northern lights](four-skies.png)](https://www.guymagen.com/23a)
+
+## Four skies
+
+- **Day.** Sun on the wing, a white cloud deck below.
+- **Sunset.** A thin orange band on the horizon and the wing going dark against it.
+- **Night.** Stars, the moon in its real phase, city lights through the gaps in the cloud.
+- **Northern lights.** Green curtains over Finland, Iceland and Norway, after dark.
 
 One of my favorite moments on a flight is looking out of the window at the wing above the clouds. It is the moment the trip starts to feel real.
 
