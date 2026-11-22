@@ -21,11 +21,12 @@ When you choose a home airport, the sun in the window moves to match your place 
 ## How it works
 
 - **Sky and clouds.** One fragment shader. The clouds are a raymarched slab with self-shadowing, and the sky colours are keyed to the sun's elevation.
-- **Day and night.** The sun's position is computed from your clock and a location estimated from your time zone. "Use precise" asks the browser for your actual location. The moon's phase is computed from the date.
+- **Day and night.** The sun's position is computed from the clock and a location. It starts from an estimate based on your time zone, and you can pick any of 126 cities or use your actual location. Picking a place shows the sky there right now, in its local time, and the view crossfades to it. The moon's phase is computed from the date.
+- **Northern lights.** Choose somewhere in Finland, Iceland or Norway and wait for dark.
 - **Wing.** A 737-style wing with real proportions (sweep, trailing-edge kink, dihedral, an airfoil section and a blended winglet), lit in the shader. It is also here as a 3D model: `wing.blend` and `wing.glb`.
 - **Blind.** A spring that keeps the speed of your swipe.
 
-The controls under the window let you scrub the time of day, play a full 24 hours, change the cloud cover and fly through a cloud on demand.
+The controls under the window let you change location, scrub the time of day, play a full 24 hours, change the cloud cover and fly through a cloud on demand.
 
 ## Credit
 
