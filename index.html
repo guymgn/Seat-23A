@@ -149,6 +149,10 @@ a.btn{text-decoration:none;display:inline-block}
     <div class="top"><label for="cover">Cloud cover</label><button class="btn" id="gustBtn">Fly through cloud</button></div>
     <input type="range" id="cover" min="0" max="100" value="46">
   </div>
+  <div class="row">
+    <label for="sound">Cabin sound</label>
+    <input type="checkbox" id="sound">
+  </div>
   <div class="row col">
     <div class="top"><label for="locInput">Location</label><button class="btn" id="locBtn" type="button">Use my location</button></div>
     <div class="combo">
@@ -872,6 +876,78 @@ $('gustBtn').onclick = () => { gustStart = (performance.now()-t0)/1000; };
 let bolt={t:-99,x:0,z:40,next:6};
 
 // ---------- loop ----------
+// ---------- cabin sound: off until someone turns it on ----------
+// Plays the recorded cabin ambience if cabin.mp3 sits next to the page, and falls back to a generated
+// rumble if it does not. The dings are always generated.
+const CABIN_URL='cabin.mp3';   // not included in this repo, see the README. Without it the generated version plays.
+let cabin=null, cabinOn=false, cabinWisp=0, nextDing=Infinity;
+function buildCabin(){
+  const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null;
+  const ctx=new AC(), sr=ctx.sampleRate;
+  const gain=v=>{ const n=ctx.createGain(); n.gain.value=v; return n; };
+  const filt=(type,f,q)=>{ const n=ctx.createBiquadFilter(); n.type=type; n.frequency.value=f; if(q) n.Q.value=q; return n; };
+  const loop=buf=>{ const n=ctx.createBufferSource(); n.buffer=buf; n.loop=true; n.start(); return n; };
+  const master=gain(0); master.connect(ctx.destination);
+  const bed=gain(1); bed.connect(master);          // the ambience, swells in cloud
+  const c={ctx,master,bed,source:'loading'};
+
+  // generated fallback: rumble, roar, hiss and a faint two-tone drone
+  const generated=()=>{
+    const len=Math.floor(sr*5), lap=Math.floor(sr*.4);
+    const noise=brown=>{ const b=ctx.createBuffer(2,len,sr);
+      for(let ch=0;ch<2;ch++){ const raw=new Float32Array(len+lap); let last=0;
+        for(let i=0;i<raw.length;i++){ const w=Math.random()*2-1; if(brown){ last=(last+.02*w)/1.02; raw[i]=last*3.5; } else raw[i]=w; }
+        for(let i=0;i<lap;i++){ const k=i/lap; raw[i]=raw[i]*k+raw[len+i]*(1-k); }
+        b.getChannelData(ch).set(raw.subarray(0,len)); }
+      return b; };
+    loop(noise(true)).connect(filt('lowpass',380)).connect(gain(.85)).connect(bed);
+    loop(noise(true)).connect(filt('bandpass',520,.6)).connect(gain(.32)).connect(bed);
+    loop(noise(false)).connect(filt('highpass',1400)).connect(filt('lowpass',5200)).connect(gain(.018)).connect(bed);
+    const drone=gain(.022); drone.connect(bed);
+    [84,126.3].forEach(f=>{ const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=f; o.connect(drone); o.start(); });
+    const lfo=ctx.createOscillator(), depth=gain(.008); lfo.frequency.value=.07; lfo.connect(depth).connect(drone.gain); lfo.start();
+    c.source='generated';
+  };
+  // recorded ambience, with the loop seam crossfaded so it never clicks or gaps
+  fetch(CABIN_URL).then(r=>{ if(!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+    .then(a=>new Promise((res,rej)=>ctx.decodeAudioData(a,res,rej)))
+    .then(buf=>{
+      const pad=Math.floor(buf.sampleRate*.15), X=Math.floor(buf.sampleRate*3), N=buf.length-2*pad, L=N-X;
+      if(L<X*2) throw new Error('too short');
+      const out=ctx.createBuffer(buf.numberOfChannels,L,buf.sampleRate);
+      for(let ch=0;ch<buf.numberOfChannels;ch++){
+        const src=buf.getChannelData(ch).subarray(pad,pad+N), d=out.getChannelData(ch);
+        d.set(src.subarray(0,L));
+        for(let i=0;i<X;i++){ const k=i/X; d[i]=src[i]*Math.sqrt(k)+src[L+i]*Math.sqrt(1-k); }
+      }
+      loop(out).connect(gain(.9)).connect(bed); c.source='recording';
+    })
+    .catch(generated);
+  return c;
+}
+// cabin chime: one soft ding, or the high-low pair
+function ding(){
+  if(!cabin) return;
+  const {ctx,master}=cabin, t0=ctx.currentTime+.05;
+  const notes=Math.random()<.55?[[659.3,0]]:[[622.3,0],[493.9,.62]];
+  notes.forEach(([f,at])=>{
+    const g=ctx.createGain(); g.connect(master);
+    g.gain.setValueAtTime(0,t0+at); g.gain.linearRampToValueAtTime(.2,t0+at+.008); g.gain.exponentialRampToValueAtTime(.0008,t0+at+2.2);
+    [[1,1],[2,.22],[3,.07]].forEach(([m,a])=>{ const o=ctx.createOscillator(), og=ctx.createGain(); o.type='sine'; o.frequency.value=f*m; og.gain.value=a;
+      o.connect(og).connect(g); o.start(t0+at); o.stop(t0+at+2.4); });
+  });
+}
+function setCabin(on){
+  cabinOn=on;
+  if(on && !cabin) cabin=buildCabin();
+  if(!cabin){ $('sound').checked=false; cabinOn=false; return; }
+  const t=cabin.ctx.currentTime;
+  if(on){ cabin.ctx.resume(); cabin.master.gain.setTargetAtTime(.5,t,.35); nextDing=performance.now()+7000+Math.random()*6000; }
+  else { cabin.master.gain.setTargetAtTime(0,t,.12); nextDing=Infinity; setTimeout(()=>{ if(!cabinOn) cabin.ctx.suspend(); },700); }
+}
+$('sound').onchange = e => setCabin(e.target.checked);
+document.addEventListener('visibilitychange',()=>{ if(cabin&&cabinOn){ document.hidden?cabin.ctx.suspend():cabin.ctx.resume(); } });
+
 // ---------- crossfade when the scene jumps: a new location, back to live, a click on the timeline ----------
 const fadeCv=$('fade'), fadeCtx=fadeCv.getContext('2d');
 const FADE=1.1; let fadeK=1, prevElev=null, sliderDown=false, dragJumped=false, cssFrom=null, cssNow=null;
@@ -915,6 +991,10 @@ function frame(now){
   // gusts of cloud streaming past
   if(!reduced && t>nextGust){ gustStart=t; nextGust=t+16+Math.random()*18; }
   const gp=(t-gustStart)/4.2, wisp=(gp>0&&gp<1)?Math.sin(gp*Math.PI)**2:0;
+  if(cabin && cabinOn){
+    if(Math.abs(wisp-cabinWisp)>.04){ cabinWisp=wisp; cabin.bed.gain.setTargetAtTime(1+wisp*.45,cabin.ctx.currentTime,.25); }
+    if(now>nextDing && !document.hidden){ ding(); nextDing=now+25000+Math.random()*45000; }   // a chime every 25 to 70 seconds
+  }
   // distant lightning at night
   if(night>.4 && !reduced && t>bolt.next){ bolt={t,x:(Math.random()-.4)*30,z:22+Math.random()*30,next:t+5+Math.random()*11}; }
   const bt=t-bolt.t;
