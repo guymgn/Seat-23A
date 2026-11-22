@@ -131,7 +131,7 @@ a.btn{text-decoration:none;display:inline-block}
     </div>
   </div>
 </div>
-<div class="hint">Swipe down on the window to close the blind. Tap to toggle.</div>
+<div class="hint" id="hint" aria-live="polite">Swipe down on the window to close the blind. Tap to toggle.</div>
 
 <div class="panel">
   <div class="row col">
@@ -574,7 +574,7 @@ function buildWing(){
 
 // ---------- WebGL ----------
 const canvas = $('sky');
-const BASE = Math.min(2, window.devicePixelRatio||1);
+const BASE = Math.min(1.5, window.devicePixelRatio||1);   // the clouds are soft, so 1.5x is enough and costs far less than 2x
 const LEVELS = [1,.75,.55]; let level = 0;
 const gl = canvas.getContext('webgl',{antialias:false,premultipliedAlpha:false,preserveDrawingBuffer:true});  // kept so the last frame can be crossfaded
 function sizeCanvas(){ canvas.width=Math.round(228*BASE*LEVELS[level]); canvas.height=Math.round(332*BASE*LEVELS[level]); if(gl) gl.viewport(0,0,canvas.width,canvas.height); }
@@ -958,6 +958,22 @@ const mixA=(a,b,k)=>a.map((v,i)=>v+(b[i]-v)*k);
 
 const t0=performance.now(); let last=t0, lastRead=0, dist=0, acc=0, frames=0;
 const auto = !navigator.webdriver;
+// Power: the scene is drawn 30 times a second, 10 when the window is not in focus, and not at all
+// when it is scrolled out of view or the blind is closed. The blind and the fades still run every frame.
+// After a spell with no input the whole loop stops until someone moves, taps or presses a key.
+// With cabin sound on it is being used as ambience, so it keeps going at a slow 15.
+let onScreen=true, lastGL=-1e9, running=true, lastInput=performance.now(), blurAt=null;
+const IDLE_MS=90000, BLUR_MS=15000, HINT=$('hint').textContent;
+function wake(){
+  lastInput=performance.now();
+  if(!running){ running=true; last=performance.now(); $('hint').textContent=HINT; requestAnimationFrame(frame); }
+}
+['pointermove','pointerdown','keydown','wheel','touchstart','scroll','focus'].forEach(ev=>addEventListener(ev,wake,{passive:true}));
+addEventListener('blur',()=>{ blurAt=performance.now(); });
+addEventListener('focus',()=>{ blurAt=null; });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) wake(); });
+if('IntersectionObserver' in window) new IntersectionObserver(es=>{ onScreen=es[0].isIntersecting; }).observe(pane);
+
 function frame(now){
   const rawDt=(now-last)/1000; const dt=Math.min(.05,rawDt); last=now;
   const t=(now-t0)/1000;
@@ -1013,7 +1029,10 @@ function frame(now){
   const flash=Math.max(pulse(ph,0,.09),pulse(ph,.22,.09));
 
   const hidden = bl.y===CLOSED && bl.target===CLOSED;
-  if(hasGL && !hidden){
+  const idle = now-lastInput>IDLE_MS;
+  const glDue = onScreen && now-lastGL >= (!document.hasFocus()?100:(idle?1000/15:1000/30))-4;
+  if(hasGL && !hidden && glDue){
+    lastGL=now;
     const elF=(s.elev<8?s.elev:8+(s.elev-8)*.2)*rad, az=-.285;
     const dir=(a,e)=>[Math.sin(a)*Math.cos(e),Math.sin(e),Math.cos(a)*Math.cos(e)];
     const sunD=dir(az,elF), moonD=dir(.22,17*rad);
@@ -1067,6 +1086,10 @@ function frame(now){
     const hh=String(Math.floor(minutes/60)).padStart(2,'0'), mm=String(Math.floor(minutes%60)).padStart(2,'0');
     $('readout').textContent=`${hh}:${mm} · ${phaseName(s.elev,s.az)}${(loc.aurora>.3&&night>.5)?' · Aurora':''} · sun ${s.elev.toFixed(0)}°`;
     if(mode!=='scrub') $('time').value=Math.floor(minutes);
+  }
+  const now2=performance.now();
+  if(!cabinOn && !bl.drag && (now2-lastInput>IDLE_MS || (blurAt!==null && now2-blurAt>BLUR_MS))){
+    running=false; $('hint').textContent='Paused to save power. Move or tap to resume.'; return;
   }
   requestAnimationFrame(frame);
 }

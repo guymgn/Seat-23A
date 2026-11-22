@@ -32,6 +32,7 @@ When you choose a home airport, the sun in the window moves to match your place 
 - **Northern lights.** Choose somewhere in Finland, Iceland or Norway and wait for dark.
 - **Wing.** A 737-style wing with real proportions (sweep, trailing-edge kink, dihedral, an airfoil section and a blended winglet), lit in the shader. It is also here as a 3D model: `wing.blend` and `wing.glb`.
 - **Blind.** A spring that keeps the speed of your swipe.
+- **Power.** The scene draws at 30 frames a second, stops when it is off screen or the blind is closed, and pauses after 90 seconds without input until you move or tap. With cabin sound on it keeps running, slowly.
 - **Cabin sound.** Off until you turn it on. The live page plays a recorded cabin ambience, [Airplane atmos](https://pixabay.com/sound-effects/technology-airplane-atmos-22955/) from Pixabay, looped with the seam blended away. That recording is under the Pixabay Content License, not MIT, so it is not in this repo. Without it the page generates its own cabin rumble, and you can drop any `cabin.mp3` next to `index.html` to use a recording instead. The chimes are generated either way.
 
 The controls under the window let you change location, scrub the time of day, play a full 24 hours, change the cloud cover, fly through a cloud on demand and turn on the cabin sound.
