@@ -960,10 +960,11 @@ const t0=performance.now(); let last=t0, lastRead=0, dist=0, acc=0, frames=0;
 const auto = !navigator.webdriver;
 // Power: the scene is drawn 30 times a second, 10 when the window is not in focus, and not at all
 // when it is scrolled out of view or the blind is closed. The blind and the fades still run every frame.
-// After a spell with no input the whole loop stops until someone moves, taps or presses a key.
+// The tab someone is watching keeps running. The loop stops 15 seconds after they switch to another
+// window or app, and after 5 minutes without input as a net for a forgotten tab. Any input resumes it.
 // With cabin sound on it is being used as ambience, so it keeps going at a slow 15.
 let onScreen=true, lastGL=-1e9, running=true, lastInput=performance.now(), blurAt=null;
-const IDLE_MS=90000, BLUR_MS=15000, HINT=$('hint').textContent;
+const IDLE_MS=300000, BLUR_MS=15000, HINT=$('hint').textContent;
 function wake(){
   lastInput=performance.now();
   if(!running){ running=true; last=performance.now(); $('hint').textContent=HINT; requestAnimationFrame(frame); }
